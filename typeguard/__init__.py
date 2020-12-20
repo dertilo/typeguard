@@ -893,9 +893,9 @@ def typechecked(func=None, *, always=False, _localns: Optional[Dict[str, Any]] =
     # Find either the first Python wrapper or the actual function
     python_func = inspect.unwrap(func, stop=lambda f: hasattr(f, '__code__'))
 
-    if not getattr(func, '__annotations__', None):
-        warn('no type annotations present -- not typechecking {}'.format(function_name(func)))
-        return func
+    # if not getattr(func, '__annotations__', None):
+    #     warn('no type annotations present -- not typechecking {}'.format(function_name(func)))
+    #     return func
 
     def wrapper(*args, **kwargs):
         memo = _CallMemo(python_func, _localns, args=args, kwargs=kwargs)

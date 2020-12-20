@@ -53,7 +53,8 @@ class TypeguardTransformer(ast.NodeVisitor):
 
         has_annotated_args = any(arg for arg in node.args.args if arg.annotation)
         has_annotated_return = bool(node.returns)
-        if has_annotated_args or has_annotated_return:
+        go_through_all_nodes = True
+        if has_annotated_args or has_annotated_return or go_through_all_nodes:
             node.decorator_list.insert(
                 0,
                 ast.Attribute(ast.Name(id='typeguard', ctx=ast.Load()), 'typechecked', ast.Load())
