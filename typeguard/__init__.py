@@ -22,7 +22,7 @@ from warnings import warn
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
 # Python 3.8+
-from typeguard.util import write_json, get_module_name
+from typeguard.util import write_json, get_module_name, get_module_name_unpack_tuple
 
 try:
     from typing_extensions import Literal
@@ -909,6 +909,7 @@ def typechecked(func=None, *, always=False, _localns: Optional[Dict[str, Any]] =
             "func_module": func.__module__,
             "func_name": func.__name__,
             "args": {k: get_module_name(v) for k, v in memo.arguments.items()},
+            "return": get_module_name_unpack_tuple(retval)
         }
         write_json("/tmp/func_args.jsonl", d, mode="at")
 
