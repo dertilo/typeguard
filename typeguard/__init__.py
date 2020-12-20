@@ -26,7 +26,7 @@ from typeguard.util import (
     write_json,
     get_module_name,
     get_module_name_unpack_tuple,
-    TypesLog,
+    TypesLog, TYPES_JSONL,
 )
 
 try:
@@ -911,7 +911,7 @@ def typechecked(func=None, *, always=False, _localns: Optional[Dict[str, Any]] =
         check_return_type(retval, memo)
 
         write_json(
-            "/tmp/func_args.jsonl",
+            TYPES_JSONL,
             TypesLog(
                 func.__module__,
                 func.__name__,

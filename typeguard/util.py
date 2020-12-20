@@ -1,6 +1,7 @@
 import gzip
 import json
 from typing import Dict, NamedTuple
+TYPES_JSONL = "/tmp/types.jsonl"
 
 
 class TypesLog(NamedTuple):
