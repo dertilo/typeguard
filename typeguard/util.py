@@ -2,7 +2,12 @@ import gzip
 import json
 from typing import Dict, NamedTuple
 
-from tests.dummymodule import DummyClass
+
+class TypesLog(NamedTuple):
+    func_module:str
+    fun_name:str
+    arg2type:Dict[str,str]
+    return_type:str
 
 
 def write_json(file: str, datum: Dict, mode="wb"):
@@ -28,7 +33,6 @@ def get_module_name(o):
   else:
     return module + '.' + o.__class__.__name__
 
-# class TypesLog(NamedTuple):
 def get_module_name_unpack_tuple(x):
     if x.__class__.__name__ == "tuple":
         return f"Tuple{[get_module_name(t) for t in x]}"
