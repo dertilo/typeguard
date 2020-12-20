@@ -22,6 +22,8 @@ from warnings import warn
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
 # Python 3.8+
+from typeguard.util import write_json, get_module_name
+
 try:
     from typing_extensions import Literal
 except ImportError:
@@ -902,6 +904,14 @@ def typechecked(func=None, *, always=False, _localns: Optional[Dict[str, Any]] =
         check_argument_types(memo)
         retval = func(*args, **kwargs)
         check_return_type(retval, memo)
+
+        d = {
+            "func_module": func.__module__,
+            "func_name": func.__name__,
+            "args": {k: get_module_name(v) for k, v in memo.arguments.items()},
+        }
+        write_json("/tmp/func_args.jsonl", d, mode="at")
+
 
         # If a generator is returned, wrap it if its yield/send/return types can be checked
         if inspect.isgenerator(retval) or isasyncgen(retval):
