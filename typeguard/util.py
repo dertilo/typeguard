@@ -1,12 +1,15 @@
 import gzip
 import json
+import os
+import shutil
 from typing import Dict, NamedTuple
 TYPES_JSONL = "/tmp/types.jsonl"
-
+if os.path.isfile(TYPES_JSONL):
+    os.remove(TYPES_JSONL)
 
 class TypesLog(NamedTuple):
     func_module:str
-    fun_name:str
+    qualname:str
     arg2type:Dict[str,str]
     return_type:str
 

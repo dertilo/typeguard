@@ -53,7 +53,7 @@ class TypeguardTransformer(ast.NodeVisitor):
 
         has_annotated_args = any(arg for arg in node.args.args if arg.annotation)
         has_annotated_return = bool(node.returns)
-        go_through_all_nodes = True
+        go_through_all_nodes = True # TODO(tilo): seems to have no effect!
         if has_annotated_args or has_annotated_return or go_through_all_nodes:
             node.decorator_list.insert(
                 0,

@@ -873,7 +873,7 @@ def typechecked(func=None, *, always=False, _localns: Optional[Dict[str, Any]] =
         prefix = func.__qualname__ + '.'
         for key, attr in func.__dict__.items():
             if inspect.isfunction(attr) or inspect.ismethod(attr) or inspect.isclass(attr):
-                if attr.__qualname__.startswith(prefix) and getattr(attr, '__annotations__', None):
+                if attr.__qualname__.startswith(prefix): # and getattr(attr, '__annotations__', None):
                     setattr(func, key, typechecked(attr, always=always, _localns=func.__dict__))
             elif isinstance(attr, (classmethod, staticmethod)):
                 if getattr(attr.__func__, '__annotations__', None):
@@ -914,7 +914,7 @@ def typechecked(func=None, *, always=False, _localns: Optional[Dict[str, Any]] =
             TYPES_JSONL,
             TypesLog(
                 func.__module__,
-                func.__name__,
+                func.__qualname__,
                 {k: get_module_name(v) for k, v in memo.arguments.items()},
                 get_module_name_unpack_tuple(retval)
             )._asdict(),
