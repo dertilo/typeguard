@@ -10,6 +10,9 @@ class TypesLog(NamedTuple):
     arg2type:Dict[str,str]
     return_type:str
 
+    def __hash__(self) -> int:
+        return hash(str(self))
+
 
 def write_json_line(file: str, datum: Dict, mode="wb"):
     with gzip.open(file, mode=mode) if file.endswith("gz") else open(
