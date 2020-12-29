@@ -20,13 +20,13 @@ from typing import (
 from unittest.mock import Mock
 from warnings import warn
 from weakref import WeakKeyDictionary, WeakValueDictionary
-
+import os
 # Python 3.8+
 from typeguard.util import (
     write_json_line,
     get_module_name,
     get_module_name_unpack_tuple,
-    TypesLog, TYPES_JSONL,
+    TypesLog,
 )
 
 try:
@@ -910,6 +910,7 @@ def typechecked(func=None, *, always=False, _localns: Optional[Dict[str, Any]] =
         retval = func(*args, **kwargs)
         check_return_type(retval, memo)
 
+        TYPES_JSONL  = os.environ["TYPES_JSONL"]
         write_json_line(
             TYPES_JSONL,
             TypesLog(
