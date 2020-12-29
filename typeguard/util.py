@@ -37,6 +37,7 @@ def get_module_name(o):
 
 def get_module_name_unpack_tuple(x):
     if x.__class__.__name__ == "tuple":
-        return f"Tuple{[get_module_name(t) for t in x]}"
+        lisst = f"[{','.join([get_module_name(t) for t in x])}]"
+        return f"Tuple{lisst}"
     else:
         return get_module_name(x)
