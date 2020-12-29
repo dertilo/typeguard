@@ -4,8 +4,6 @@ import os
 import shutil
 from typing import Dict, NamedTuple
 TYPES_JSONL = "/tmp/types.jsonl"
-if os.path.isfile(TYPES_JSONL):
-    os.remove(TYPES_JSONL)
 
 class TypesLog(NamedTuple):
     func_module:str
@@ -14,11 +12,11 @@ class TypesLog(NamedTuple):
     return_type:str
 
 
-def write_json(file: str, datum: Dict, mode="wb"):
+def write_json_line(file: str, datum: Dict, mode="wb"):
     with gzip.open(file, mode=mode) if file.endswith("gz") else open(
         file, mode=mode
     ) as f:
-        line = json.dumps(datum, skipkeys=True, ensure_ascii=False)
+        line = f"{json.dumps(datum, skipkeys=True, ensure_ascii=False)}\n"
         if "b" in mode:
             line = line.encode("utf-8")
         f.write(line)

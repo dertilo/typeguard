@@ -23,7 +23,7 @@ from weakref import WeakKeyDictionary, WeakValueDictionary
 
 # Python 3.8+
 from typeguard.util import (
-    write_json,
+    write_json_line,
     get_module_name,
     get_module_name_unpack_tuple,
     TypesLog, TYPES_JSONL,
@@ -910,7 +910,7 @@ def typechecked(func=None, *, always=False, _localns: Optional[Dict[str, Any]] =
         retval = func(*args, **kwargs)
         check_return_type(retval, memo)
 
-        write_json(
+        write_json_line(
             TYPES_JSONL,
             TypesLog(
                 func.__module__,
