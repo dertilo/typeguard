@@ -876,9 +876,9 @@ def typechecked(func=None, *, always=False, _localns: Optional[Dict[str, Any]] =
                 if attr.__qualname__.startswith(prefix): # and getattr(attr, '__annotations__', None):
                     setattr(func, key, typechecked(attr, always=always, _localns=func.__dict__))
             elif isinstance(attr, (classmethod, staticmethod)):
-                if getattr(attr.__func__, '__annotations__', None):
-                    wrapped = typechecked(attr.__func__, always=always, _localns=func.__dict__)
-                    setattr(func, key, type(attr)(wrapped))
+                # if getattr(attr.__func__, '__annotations__', None):
+                wrapped = typechecked(attr.__func__, always=always, _localns=func.__dict__)
+                setattr(func, key, type(attr)(wrapped))
             elif isinstance(attr, property):
                 kwargs = dict(doc=attr.__doc__)
                 for name in ("fset", "fget", "fdel"):
