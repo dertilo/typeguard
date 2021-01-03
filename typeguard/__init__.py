@@ -25,7 +25,7 @@ import os
 from typeguard.util import (
     write_json_line,
     get_module_name,
-    get_module_name_unpack_tuple,
+    get_module_names,
     TypesLog,
 )
 
@@ -916,8 +916,8 @@ def typechecked(func=None, *, always=False, _localns: Optional[Dict[str, Any]] =
             TypesLog(
                 func.__module__,
                 func.__qualname__,
-                {k: get_module_name(v) for k, v in memo.arguments.items()},
-                get_module_name_unpack_tuple(retval)
+                {k: get_module_names(v) for k, v in memo.arguments.items()},
+                get_module_names(retval)
             )._asdict(),
             mode="at",
         )

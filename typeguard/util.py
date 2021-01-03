@@ -37,9 +37,18 @@ def get_module_name(o):
   else:
     return module + '.' + o.__class__.__name__
 
-def get_module_name_unpack_tuple(x):
-    if x.__class__.__name__ == "tuple":
+typing_types = ["list", "dict", "tuple", "generator"]
+
+def get_module_names(x):
+    if x.__class__.__name__ == "tuple" and len(x)<=5:
         lisst = f"[{','.join([get_module_name(t) for t in x])}]"
         return f"Tuple{lisst}"
+    elif x.__class__.__name__ == "list":
+        types = [get_module_name(t) for t in x]
+        if len(set(types))==1:
+            t = types[0]
+            return f"List[{t.capitalize() if t in typing_types else t}]"
+        else:
+            return get_module_name(x)
     else:
         return get_module_name(x)
