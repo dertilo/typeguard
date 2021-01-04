@@ -37,7 +37,6 @@ def get_module_name(o):
   else:
     return module + '.' + o.__class__.__name__
 
-typing_types = ["list", "dict", "tuple", "generator"]
 
 def get_module_names(x):
     if x.__class__.__name__ == "tuple" and len(x)<=5:
@@ -47,8 +46,25 @@ def get_module_names(x):
         types = [get_module_name(t) for t in x]
         if len(set(types))==1:
             t = types[0]
-            return f"List[{t.capitalize() if t in typing_types else t}]"
+            return f"List[{t}]"
         else:
             return get_module_name(x)
+    elif x.__class__.__name__ == "dict":
+        key_type = get_type(x.keys())
+        val_type = get_type(x.values())
+        if any([t != "Any" for t in [key_type,val_type]]):
+            ann = f"Dict[{key_type},{val_type}]"
+        else:
+            ann = "Dict"
+        return ann
     else:
         return get_module_name(x)
+
+
+def get_type(variables):
+    types = [get_module_name(t) for t in variables]
+    if len(set(types)) == 1:
+        ttype = types[0]
+    else:
+        ttype = "Any"
+    return ttype
