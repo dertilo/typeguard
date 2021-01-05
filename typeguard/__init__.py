@@ -25,7 +25,6 @@ import os
 from typeguard.util import (
     get_module_name,
     get_module_names,
-    TypesLog,
     write_call_log
 )
 

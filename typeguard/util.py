@@ -2,16 +2,40 @@ import gzip
 import json
 import os
 import shutil
-from typing import Dict, NamedTuple
+from dataclasses import dataclass, field, asdict
+from typing import Dict, NamedTuple, List
 
-class TypesLog(NamedTuple):
-    func_module:str
-    qualname:str
-    arg2type:Dict[str,str]
-    return_type:str
 
-    def __hash__(self) -> int:
-        return hash(str(self))
+@dataclass
+class CallLog:
+    arg2type: Dict[str, str]
+    return_type: str
+    count: int = 1
+
+    def key(self)-> int:
+        return hash((str(self.arg2type),str(self.return_type)))
+
+
+@dataclass
+class TypesLog:
+    func_module: str
+    qualname: str
+    call_logs: Dict[str, CallLog] = field(default_factory=dict)
+
+    def key(self) -> str:
+        return f"{self.func_module}-{self.qualname}"
+
+    def add_call_log(self, call_log: CallLog):
+        if call_log.key() in self.call_logs:
+            self.call_logs[call_log.key()].count += 1
+        else:
+            self.call_logs[call_log.key()] = call_log
+
+    # @staticmethod
+    # def to_dict(tl:'TypesLog'):
+    #     return asdict(tl)
+
+TYPEGUARD_CACHE: Dict[str, TypesLog] = {}
 
 
 def write_json_line(file: str, datum: Dict, mode="wb"):
@@ -23,28 +47,29 @@ def write_json_line(file: str, datum: Dict, mode="wb"):
             line = line.encode("utf-8")
         f.write(line)
 
-def get_module_name(o):
-  # o.__module__ + "." + o.__class__.__qualname__ is an example in
-  # this context of H.L. Mencken's "neat, plausible, and wrong."
-  # Python makes no guarantees as to whether the __module__ special
-  # attribute is defined, so we take a more circumspect approach.
-  # Alas, the module name is explicitly excluded from __qualname__
-  # in Python 3.
 
-  module = o.__class__.__module__
-  if module is None or module == str.__class__.__module__:
-    return o.__class__.__name__  # Avoid reporting __builtin__
-  else:
-    return module + '.' + o.__class__.__name__
+def get_module_name(o):
+    # o.__module__ + "." + o.__class__.__qualname__ is an example in
+    # this context of H.L. Mencken's "neat, plausible, and wrong."
+    # Python makes no guarantees as to whether the __module__ special
+    # attribute is defined, so we take a more circumspect approach.
+    # Alas, the module name is explicitly excluded from __qualname__
+    # in Python 3.
+
+    module = o.__class__.__module__
+    if module is None or module == str.__class__.__module__:
+        return o.__class__.__name__  # Avoid reporting __builtin__
+    else:
+        return module + "." + o.__class__.__name__
 
 
 def get_module_names(x):
-    if x.__class__.__name__ == "tuple" and len(x)<=5:
+    if x.__class__.__name__ == "tuple" and len(x) <= 5:
         lisst = f"[{','.join([get_module_name(t) for t in x])}]"
         return f"Tuple{lisst}"
     elif x.__class__.__name__ == "list":
         types = [get_module_name(t) for t in x]
-        if len(set(types))==1:
+        if len(set(types)) == 1:
             t = types[0]
             return f"List[{t}]"
         else:
@@ -52,7 +77,7 @@ def get_module_names(x):
     elif x.__class__.__name__ == "dict":
         key_type = get_type(x.keys())
         val_type = get_type(x.values())
-        if any([t != "Any" for t in [key_type,val_type]]):
+        if any([t != "Any" for t in [key_type, val_type]]):
             ann = f"Dict[{key_type},{val_type}]"
         else:
             ann = "Dict"
@@ -69,15 +94,21 @@ def get_type(variables):
         ttype = "Any"
     return ttype
 
-def write_call_log(func,memo, retval):
-    TYPES_JSONL = os.environ["TYPES_JSONL"]
-    write_json_line(
-        TYPES_JSONL,
-        TypesLog(
-            func.__module__,
-            func.__qualname__,
-            {k: get_module_names(v) for k, v in memo.arguments.items()},
-            get_module_names(retval)
-        )._asdict(),
-        mode="at",
+
+def write_call_log(func, memo, retval):
+    global TYPEGUARD_CACHE
+
+    call_log = CallLog(
+        {k: get_module_names(v) for k, v in memo.arguments.items()},
+        get_module_names(retval),
     )
+
+    types_log = TypesLog(
+        func.__module__,
+        func.__qualname__,
+    )
+
+    if types_log.key() not in TYPEGUARD_CACHE:
+        TYPEGUARD_CACHE[types_log.key()] = types_log
+
+    TYPEGUARD_CACHE[types_log.key()].add_call_log(call_log)
