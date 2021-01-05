@@ -23,10 +23,10 @@ from weakref import WeakKeyDictionary, WeakValueDictionary
 import os
 # Python 3.8+
 from typeguard.util import (
-    write_json_line,
     get_module_name,
     get_module_names,
     TypesLog,
+    write_call_log
 )
 
 try:
@@ -758,11 +758,11 @@ def check_argument_types(memo: Optional[_CallMemo] = None) -> bool:
 
 
 class TypeCheckedGenerator:
-    def __init__(self, wrapped: Generator, memo: _CallMemo):
+    def __init__(self,func, wrapped: Generator, memo: _CallMemo):
         rtype_args = []
-        if hasattr(memo.type_hints['return'], "__args__"):
+        if "return" in memo.type_hints and hasattr(memo.type_hints['return'], "__args__"):
             rtype_args = memo.type_hints['return'].__args__
-
+        self.__func = func
         self.__wrapped = wrapped
         self.__memo = memo
         self.__yield_type = rtype_args[0] if rtype_args else Any
@@ -796,6 +796,8 @@ class TypeCheckedGenerator:
         except StopIteration as exc:
             check_type('return value', exc.value, self.__return_type, memo=self.__memo)
             raise
+
+        write_call_log(self.__func,self.__memo, value)
 
         check_type('value yielded from generator', value, self.__yield_type, memo=self.__memo)
         return value
@@ -910,27 +912,18 @@ def typechecked(func=None, *, always=False, _localns: Optional[Dict[str, Any]] =
         retval = func(*args, **kwargs)
         check_return_type(retval, memo)
 
-        TYPES_JSONL  = os.environ["TYPES_JSONL"]
-        write_json_line(
-            TYPES_JSONL,
-            TypesLog(
-                func.__module__,
-                func.__qualname__,
-                {k: get_module_names(v) for k, v in memo.arguments.items()},
-                get_module_names(retval)
-            )._asdict(),
-            mode="at",
-        )
+        write_call_log(func,memo, retval)
 
         # If a generator is returned, wrap it if its yield/send/return types can be checked
         if inspect.isgenerator(retval) or isasyncgen(retval):
-            return_type = memo.type_hints.get('return')
-            if return_type:
-                origin = getattr(return_type, '__origin__', None)
-                if origin in generator_origin_types:
-                    return TypeCheckedGenerator(retval, memo)
-                elif origin is not None and origin in asyncgen_origin_types:
-                    return TypeCheckedAsyncGenerator(retval, memo)
+            return TypeCheckedGenerator(func,retval, memo) # TODO(tilo): always wraps generators no type-hints necessary -> might cause issues?
+            # return_type = memo.type_hints.get('return')
+            # if return_type:
+            #     origin = getattr(return_type, '__origin__', None)
+            #     if origin in generator_origin_types:
+            #         return TypeCheckedGenerator(retval, memo)
+            #     elif origin is not None and origin in asyncgen_origin_types:
+            #         return TypeCheckedAsyncGenerator(retval, memo)
 
         return retval
 

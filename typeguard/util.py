@@ -68,3 +68,16 @@ def get_type(variables):
     else:
         ttype = "Any"
     return ttype
+
+def write_call_log(func,memo, retval):
+    TYPES_JSONL = os.environ["TYPES_JSONL"]
+    write_json_line(
+        TYPES_JSONL,
+        TypesLog(
+            func.__module__,
+            func.__qualname__,
+            {k: get_module_names(v) for k, v in memo.arguments.items()},
+            get_module_names(retval)
+        )._asdict(),
+        mode="at",
+    )
