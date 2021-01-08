@@ -24,7 +24,7 @@ import os
 # Python 3.8+
 from typeguard.util import (
     get_module_name,
-    get_module_names,
+    build_annotation,
     write_call_log
 )
 
@@ -792,11 +792,11 @@ class TypeCheckedGenerator:
 
         try:
             value = self.__wrapped.send(obj)
+            write_call_log(self.__func,self.__memo, value,in_generator=True)
         except StopIteration as exc:
             check_type('return value', exc.value, self.__return_type, memo=self.__memo)
             raise
 
-        write_call_log(self.__func,self.__memo, value)
 
         check_type('value yielded from generator', value, self.__yield_type, memo=self.__memo)
         return value
@@ -911,11 +911,13 @@ def typechecked(func=None, *, always=False, _localns: Optional[Dict[str, Any]] =
         retval = func(*args, **kwargs)
         check_return_type(retval, memo)
 
-        write_call_log(func,memo, retval)
 
         # If a generator is returned, wrap it if its yield/send/return types can be checked
         if inspect.isgenerator(retval) or isasyncgen(retval):
             return TypeCheckedGenerator(func,retval, memo) # TODO(tilo): always wraps generators no type-hints necessary -> might cause issues?
+        else:
+            write_call_log(func, memo, retval)
+
             # return_type = memo.type_hints.get('return')
             # if return_type:
             #     origin = getattr(return_type, '__origin__', None)

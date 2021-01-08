@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 from dataclasses import dataclass, field, asdict
-from typing import Dict, NamedTuple, List
+from typing import Dict, NamedTuple, List, Any
 
 
 @dataclass
@@ -31,9 +31,9 @@ class TypesLog:
         else:
             self.call_logs[call_log.key()] = call_log
 
-    # @staticmethod
-    # def to_dict(tl:'TypesLog'):
-    #     return asdict(tl)
+    @staticmethod
+    def from_dict(d:Dict):
+        return TypesLog(func_module=d["func_module"],qualname=d["qualname"],call_logs={i:CallLog(**c) for i,c in d["call_logs"].items()})
 
 TYPEGUARD_CACHE: Dict[str, TypesLog] = {}
 
@@ -63,17 +63,17 @@ def get_module_name(o):
         return module + "." + o.__class__.__name__
 
 
-def get_module_names(x):
+def build_annotation(x:Any, in_generator=False):
     if x.__class__.__name__ == "tuple" and len(x) <= 5:
         lisst = f"[{','.join([get_module_name(t) for t in x])}]"
-        return f"Tuple{lisst}"
+        annotation = f"Tuple{lisst}"
     elif x.__class__.__name__ == "list":
         types = [get_module_name(t) for t in x]
         if len(set(types)) == 1:
             t = types[0]
-            return f"List[{t}]"
+            annotation = f"List[{t}]"
         else:
-            return get_module_name(x)
+            annotation = get_module_name(x)
     elif x.__class__.__name__ == "dict":
         key_type = get_type(x.keys())
         val_type = get_type(x.values())
@@ -81,9 +81,13 @@ def get_module_names(x):
             ann = f"Dict[{key_type},{val_type}]"
         else:
             ann = "Dict"
-        return ann
+        annotation = ann
     else:
-        return get_module_name(x)
+        annotation = get_module_name(x)
+    if in_generator:
+        annotation = f"Generator[{annotation},None,None]"
+    return annotation
+
 
 
 def get_type(variables):
@@ -95,12 +99,12 @@ def get_type(variables):
     return ttype
 
 
-def write_call_log(func, memo, retval):
+def write_call_log(func, memo, retval,in_generator=False):
     global TYPEGUARD_CACHE
 
     call_log = CallLog(
-        {k: get_module_names(v) for k, v in memo.arguments.items()},
-        get_module_names(retval),
+        {k: build_annotation(v) for k, v in memo.arguments.items()},
+        build_annotation(retval, in_generator),
     )
 
     types_log = TypesLog(
