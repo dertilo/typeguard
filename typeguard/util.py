@@ -20,6 +20,7 @@ class CallLog:
 class TypesLog:
     func_module: str
     qualname: str
+    line:int
     call_logs: Dict[str, CallLog] = field(default_factory=dict)
 
     def key(self) -> str:
@@ -36,6 +37,7 @@ class TypesLog:
         return TypesLog(
             func_module=d["func_module"],
             qualname=d["qualname"],
+            line=d["line"],
             call_logs={i: CallLog(**c) for i, c in d["call_logs"].items()},
         )
 
@@ -126,6 +128,7 @@ def add_to_cache(TYPEGUARD_CACHE, func, in_generator, memo, retval):
     types_log = TypesLog(
         func.__module__,
         func.__qualname__,
+        func.__code__.co_firstlineno
     )
     if types_log.key() not in TYPEGUARD_CACHE:
         TYPEGUARD_CACHE[types_log.key()] = types_log
