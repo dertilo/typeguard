@@ -25,7 +25,7 @@ import os
 from typeguard.util import (
     get_module_name,
     build_annotation,
-    write_call_log
+    log_fun_call
 )
 
 try:
@@ -792,7 +792,7 @@ class TypeCheckedGenerator:
 
         try:
             value = self.__wrapped.send(obj)
-            write_call_log(self.__func,self.__memo, value,in_generator=True)
+            log_fun_call(self.__func, self.__memo, value, in_generator=True)
         except StopIteration as exc:
             check_type('return value', exc.value, self.__return_type, memo=self.__memo)
             raise
@@ -916,7 +916,7 @@ def typechecked(func=None, *, always=False, _localns: Optional[Dict[str, Any]] =
         if inspect.isgenerator(retval) or isasyncgen(retval):
             return TypeCheckedGenerator(func,retval, memo) # TODO(tilo): always wraps generators no type-hints necessary -> might cause issues?
         else:
-            write_call_log(func, memo, retval)
+            log_fun_call(func, memo, retval)
 
             # return_type = memo.type_hints.get('return')
             # if return_type:

@@ -12,8 +12,8 @@ class CallLog:
     return_type: str
     count: int = 1
 
-    def key(self)-> int:
-        return hash((str(self.arg2type),str(self.return_type)))
+    def key(self) -> int:
+        return hash((str(self.arg2type), str(self.return_type)))
 
 
 @dataclass
@@ -32,8 +32,13 @@ class TypesLog:
             self.call_logs[call_log.key()] = call_log
 
     @staticmethod
-    def from_dict(d:Dict):
-        return TypesLog(func_module=d["func_module"],qualname=d["qualname"],call_logs={i:CallLog(**c) for i,c in d["call_logs"].items()})
+    def from_dict(d: Dict):
+        return TypesLog(
+            func_module=d["func_module"],
+            qualname=d["qualname"],
+            call_logs={i: CallLog(**c) for i, c in d["call_logs"].items()},
+        )
+
 
 TYPEGUARD_CACHE: Dict[str, TypesLog] = {}
 
@@ -63,7 +68,7 @@ def get_module_name(o):
         return module + "." + o.__class__.__name__
 
 
-def build_annotation(x:Any, in_generator=False):
+def build_annotation(x: Any, in_generator=False):
     if x.__class__.__name__ == "tuple" and len(x) <= 5:
         lisst = f"[{','.join([get_module_name(t) for t in x])}]"
         annotation = f"Tuple{lisst}"
@@ -89,7 +94,6 @@ def build_annotation(x:Any, in_generator=False):
     return annotation
 
 
-
 def get_type(variables):
     types = [get_module_name(t) for t in variables]
     if len(set(types)) == 1:
@@ -99,20 +103,30 @@ def get_type(variables):
     return ttype
 
 
-def write_call_log(func, memo, retval,in_generator=False):
+def unwanted(func):
+    if func.__module__.startswith("namedtuple") and func.__name__.endswith("__new__"):
+        is_unwanted = True
+    else:
+        is_unwanted = False
+    return is_unwanted
+
+
+def log_fun_call(func, memo, retval, in_generator=False):
     global TYPEGUARD_CACHE
 
-    call_log = CallLog(
-        {k: build_annotation(v) for k, v in memo.arguments.items()},
-        build_annotation(retval, in_generator),
-    )
+    if not unwanted(func):
+        add_to_cache(TYPEGUARD_CACHE, func, in_generator, memo, retval)
 
+
+def add_to_cache(TYPEGUARD_CACHE, func, in_generator, memo, retval):
+    call_log = CallLog(
+        arg2type={k: build_annotation(v) for k, v in memo.arguments.items()},
+        return_type=build_annotation(retval, in_generator),
+    )
     types_log = TypesLog(
         func.__module__,
         func.__qualname__,
     )
-
     if types_log.key() not in TYPEGUARD_CACHE:
         TYPEGUARD_CACHE[types_log.key()] = types_log
-
     TYPEGUARD_CACHE[types_log.key()].add_call_log(call_log)
