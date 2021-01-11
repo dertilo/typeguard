@@ -24,7 +24,7 @@ class TypesLog:
     call_logs: Dict[str, CallLog] = field(default_factory=dict)
 
     def key(self) -> str:
-        return f"{self.func_module}-{self.qualname}"
+        return f"{self.func_module}-{self.qualname}-{self.line}"
 
     def add_call_log(self, call_log: CallLog):
         if call_log.key() in self.call_logs:
