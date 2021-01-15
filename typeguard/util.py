@@ -20,7 +20,7 @@ class CallLog:
 class TypesLog:
     func_module: str
     qualname: str
-    line:int
+    line: int
     call_logs: Dict[str, CallLog] = field(default_factory=dict)
 
     def key(self) -> str:
@@ -73,26 +73,26 @@ def get_module_name(o):
 def build_annotation(x: Any, in_generator=False):
     if x.__class__.__name__ == "tuple" and len(x) <= 5:
         lisst = f"[{','.join([get_module_name(t) for t in x])}]"
-        annotation = f"Tuple{lisst}"
+        annotation = f"typing.Tuple{lisst}"
     elif x.__class__.__name__ == "list":
         types = [get_module_name(t) for t in x]
         if len(set(types)) == 1:
             t = types[0]
-            annotation = f"List[{t}]"
+            annotation = f"typing.List[{t}]"
         else:
-            annotation = get_module_name(x)
+            annotation = f"typing.List"
     elif x.__class__.__name__ == "dict":
         key_type = get_type(x.keys())
         val_type = get_type(x.values())
         if any([t != "Any" for t in [key_type, val_type]]):
-            ann = f"Dict[{key_type},{val_type}]"
+            ann = f"typing.Dict[{key_type},{val_type}]"
         else:
-            ann = "Dict"
+            ann = "typing.Dict"
         annotation = ann
     else:
         annotation = get_module_name(x)
     if in_generator:
-        annotation = f"Generator[{annotation},None,None]"
+        annotation = f"typing.Generator[{annotation},None,None]"
     return annotation
 
 
@@ -126,9 +126,7 @@ def add_to_cache(TYPEGUARD_CACHE, func, in_generator, memo, retval):
         return_type=build_annotation(retval, in_generator),
     )
     types_log = TypesLog(
-        func.__module__,
-        func.__qualname__,
-        func.__code__.co_firstlineno
+        func.__module__, func.__qualname__, func.__code__.co_firstlineno
     )
     if types_log.key() not in TYPEGUARD_CACHE:
         TYPEGUARD_CACHE[types_log.key()] = types_log
