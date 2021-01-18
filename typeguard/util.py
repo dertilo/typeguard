@@ -70,17 +70,18 @@ def get_module_name(o):
         return module + "." + o.__class__.__name__
 
 
-def build_annotation(x: Any, in_generator=False):
+def get_nested_type(x: Any, in_generator=False):
     if x.__class__.__name__ == "tuple" and len(x) <= 5:
-        lisst = f"[{','.join([get_module_name(t) for t in x])}]"
+        lisst = f"[{','.join([get_nested_type(t) for t in x])}]"
         annotation = f"typing.Tuple{lisst}"
     elif x.__class__.__name__ == "list":
-        types = [get_module_name(t) for t in x]
+        types = [get_nested_type(t) for t in x]
         if len(set(types)) == 1:
             t = types[0]
+
             annotation = f"typing.List[{t}]"
         else:
-            annotation = f"typing.List"
+            annotation = f"typing.List[typing.Any]"
     elif x.__class__.__name__ == "dict":
         key_type = get_type(x.keys())
         val_type = get_type(x.values())
@@ -122,8 +123,8 @@ def log_fun_call(func, memo, retval, in_generator=False):
 
 def add_to_cache(TYPEGUARD_CACHE, func, in_generator, memo, retval):
     call_log = CallLog(
-        arg2type={k: build_annotation(v) for k, v in memo.arguments.items()},
-        return_type=build_annotation(retval, in_generator),
+        arg2type={k: get_nested_type(v) for k, v in memo.arguments.items()},
+        return_type=get_nested_type(retval, in_generator),
     )
     types_log = TypesLog(
         func.__module__, func.__qualname__, func.__code__.co_firstlineno

@@ -24,7 +24,7 @@ import os
 # Python 3.8+
 from typeguard.util import (
     get_module_name,
-    build_annotation,
+    get_nested_type,
     log_fun_call
 )
 
