@@ -73,12 +73,15 @@ def get_module_name(o):
 
 
 def get_nested_type(x: Any, in_generator=False):
-    if x.__class__.__name__ == "tuple" and len(x) <= 5:
+    if x.__class__.__name__ == "set":
+        common_type = get_common_type(x)
+        a = f"typing.Set[{common_type}]"
+    elif x.__class__.__name__ == "tuple" and len(x) <= 5:
         lisst = f"[{','.join([get_nested_type(t) for t in x])}]"
-        annotation = f"typing.Tuple{lisst}"
+        a = f"typing.Tuple{lisst}"
     elif x.__class__.__name__ == "list":
         common_type = get_common_type(x)
-        annotation = f"typing.List[{common_type}]"
+        a = f"typing.List[{common_type}]"
     elif x.__class__.__name__ == "dict":
         key_type = get_common_type(x.keys())
         val_type = get_common_type(x.values())
@@ -87,18 +90,18 @@ def get_nested_type(x: Any, in_generator=False):
             ann = f"typing.Dict[{key_type},{val_type}]"
         else:
             ann = "typing.Dict"
-        annotation = ann
+        a = ann
     else:
-        annotation = get_typing_type(get_module_name(x))
+        a = get_typing_type(get_module_name(x))
     if in_generator:
-        annotation = f"typing.Generator[{annotation},None,None]"
-    return annotation
+        a = f"typing.Generator[{a},None,None]"
+    return a
 
 
 def get_typing_type(type_name: str):
     potential_typing_type = type_name.capitalize()
     if hasattr(typing, potential_typing_type):
-        return getattr(typing, potential_typing_type)
+        return str(getattr(typing, potential_typing_type))
     else:
         return type_name
 

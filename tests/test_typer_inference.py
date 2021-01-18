@@ -16,6 +16,9 @@ dict_str2float = {"str-to-float": 1.0}
     ([dict_str2any, dict_any2any], "typing.List[typing.Dict]"),
     ([dict_str2float, dict_str2float], "typing.List[typing.Dict[str,float]]"),
     ((dict_str2float, dict_str2float), "typing.Tuple[typing.Dict[str,float],typing.Dict[str,float]]"),
+    ((1,2,3,4,5), "typing.Tuple[int,int,int,int,int]"),
+    ((1,2,3,4,5,6), "typing.Tuple"),# tuple limit
+    ({"a","b"}, "typing.Set[str]"),# tuple limit
 ])
 # fmt:on
 
