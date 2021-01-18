@@ -89,7 +89,7 @@ def get_nested_type(x: Any, in_generator=False):
             ann = "typing.Dict"
         annotation = ann
     else:
-        annotation = get_module_name(x)
+        annotation = get_typing_type(get_module_name(x))
     if in_generator:
         annotation = f"typing.Generator[{annotation},None,None]"
     return annotation
@@ -104,9 +104,11 @@ def get_typing_type(type_name: str):
 
 
 def get_common_type(variables: List[Any]):
-    types = [get_typing_type(get_module_name(t)) for t in variables]
-    if len(set(types)) == 1:
-        ttype = types[0]
+    types = [get_nested_type(t) for t in variables]
+    common_prefix = os.path.commonprefix(types)
+
+    if len(common_prefix) > 0:
+        ttype = common_prefix
     else:
         ttype = "typing.Any"
     return ttype

@@ -2,15 +2,20 @@ import pytest
 from typeguard import get_nested_type
 
 # fmt:off
-@pytest.mark.parametrize("data,expected",[
-    # (["foo"],"typing.List[str]"),
-    # (["foo",1],"typing.List[typing.Any]"),
-    # ({"a":1,"b":"foo"},"typing.Dict[str,typing.Any]"),
-    # ({"a":1,1.0:"foo"},"typing.Dict"),
-    # ([{"a":1,"b":"foo"}, {"a":1,1.0:"foo"}], "typing.List[typing.Dict]"),
+dict_str2any = {"str": 2, "an": "y"}
+dict_any2any = {"any": 2, 1.0: "any"}
+dict_str2float = {"str-to-float": 1.0}
 
-    ([{"foo":1.0},{"foo":1.0}],"typing.List[typing.Dict[str,float]]"),# TODO
-    # (({"foo":1.0},{"foo":1.0}),"typing.Tuple[typing.Dict[str,float],typing.Dict[str,float]]"),
+
+@pytest.mark.parametrize("data,expected",[
+    (["foo"],"typing.List[str]"),
+    (["foo",1],"typing.List[typing.Any]"),
+    (dict_str2any, "typing.Dict[str,typing.Any]"),
+    (dict_any2any, "typing.Dict"),
+    ([dict_str2any, dict_str2any], "typing.List[typing.Dict[str,typing.Any]]"),
+    ([dict_str2any, dict_any2any], "typing.List[typing.Dict]"),
+    ([dict_str2float, dict_str2float], "typing.List[typing.Dict[str,float]]"),
+    ((dict_str2float, dict_str2float), "typing.Tuple[typing.Dict[str,float],typing.Dict[str,float]]"),
 ])
 # fmt:on
 
