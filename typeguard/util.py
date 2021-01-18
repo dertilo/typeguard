@@ -5,6 +5,8 @@ import shutil
 from dataclasses import dataclass, field, asdict
 from typing import Dict, NamedTuple, List, Any
 
+import typing
+
 
 @dataclass
 class CallLog:
@@ -75,17 +77,13 @@ def get_nested_type(x: Any, in_generator=False):
         lisst = f"[{','.join([get_nested_type(t) for t in x])}]"
         annotation = f"typing.Tuple{lisst}"
     elif x.__class__.__name__ == "list":
-        types = [get_nested_type(t) for t in x]
-        if len(set(types)) == 1:
-            t = types[0]
-
-            annotation = f"typing.List[{t}]"
-        else:
-            annotation = f"typing.List[typing.Any]"
+        common_type = get_common_type(x)
+        annotation = f"typing.List[{common_type}]"
     elif x.__class__.__name__ == "dict":
-        key_type = get_type(x.keys())
-        val_type = get_type(x.values())
-        if any([t != "Any" for t in [key_type, val_type]]):
+        key_type = get_common_type(x.keys())
+        val_type = get_common_type(x.values())
+        atleast_one_is_not_any = any([t != "typing.Any" for t in [key_type, val_type]])
+        if atleast_one_is_not_any:
             ann = f"typing.Dict[{key_type},{val_type}]"
         else:
             ann = "typing.Dict"
@@ -97,12 +95,20 @@ def get_nested_type(x: Any, in_generator=False):
     return annotation
 
 
-def get_type(variables):
-    types = [get_module_name(t) for t in variables]
+def get_typing_type(type_name: str):
+    potential_typing_type = type_name.capitalize()
+    if hasattr(typing, potential_typing_type):
+        return getattr(typing, potential_typing_type)
+    else:
+        return type_name
+
+
+def get_common_type(variables: List[Any]):
+    types = [get_typing_type(get_module_name(t)) for t in variables]
     if len(set(types)) == 1:
         ttype = types[0]
     else:
-        ttype = "Any"
+        ttype = "typing.Any"
     return ttype
 
 
