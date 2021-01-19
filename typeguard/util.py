@@ -76,9 +76,15 @@ def get_nested_type(x: Any, in_generator=False):
     if x.__class__.__name__ == "set":
         common_type = get_common_type(x)
         a = f"typing.Set[{common_type}]"
-    elif x.__class__.__name__ == "tuple" and len(x) <= 5:
-        lisst = f"[{','.join([get_nested_type(t) for t in x])}]"
-        a = f"typing.Tuple{lisst}"
+    elif x.__class__.__name__ == "tuple":
+        if len(x) <= 5:
+            lisst = f"[{','.join([get_nested_type(t) for t in x])}]"
+            a = f"typing.Tuple{lisst}"
+        elif len(x) < 100:
+            common_type = get_common_type(x)
+            a = f"typing.Tuple[{common_type}, ...]"
+        else:
+            a = f"typing.Tuple[typint.Any, ...]"
     elif x.__class__.__name__ == "list":
         common_type = get_common_type(x)
         a = f"typing.List[{common_type}]"
@@ -107,7 +113,9 @@ def get_typing_type(type_name: str):
 
 
 def get_common_type(variables: List[Any]):
-    types = [get_nested_type(t).split("[") for t in variables] # TODO(tilo): really split [ ??
+    types = [
+        get_nested_type(t).split("[") for t in variables
+    ]  # TODO(tilo): really split [ ??
     common_prefix = os.path.commonprefix(types)
 
     if len(common_prefix) > 0:
