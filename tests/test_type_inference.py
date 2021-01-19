@@ -6,6 +6,11 @@ dict_str2any = {"str": 2, "an": "y"}
 dict_any2any = {"any": 2, 1.0: "any"}
 dict_str2float = {"str-to-float": 1.0}
 
+class Bar:
+    pass
+
+class Bazz:
+    pass
 
 @pytest.mark.parametrize("data,expected",[
     (["foo"],"typing.List[str]"),
@@ -19,6 +24,8 @@ dict_str2float = {"str-to-float": 1.0}
     ((1,2,3,4,5), "typing.Tuple[int,int,int,int,int]"),
     ((1,2,3,4,5,6), "typing.Tuple"),# tuple limit
     ({"a","b"}, "typing.Set[str]"),# tuple limit
+    ([Bar(), Bazz()], "typing.List[typing.Any]"),
+
 ])
 # fmt:on
 

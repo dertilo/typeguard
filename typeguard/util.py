@@ -107,11 +107,11 @@ def get_typing_type(type_name: str):
 
 
 def get_common_type(variables: List[Any]):
-    types = [get_nested_type(t) for t in variables]
+    types = [get_nested_type(t).split("[") for t in variables] # TODO(tilo): really split [ ??
     common_prefix = os.path.commonprefix(types)
 
     if len(common_prefix) > 0:
-        ttype = common_prefix
+        ttype = "[".join(common_prefix)
     else:
         ttype = "typing.Any"
     return ttype
