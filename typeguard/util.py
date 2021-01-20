@@ -95,7 +95,7 @@ def get_nested_type(x: Any, in_generator=False):
         if atleast_one_is_not_any:
             ann = f"typing.Dict[{key_type},{val_type}]"
         else:
-            ann = "typing.Dict"
+            ann = "typing.Dict[typing.Any]"
         a = ann
     else:
         a = get_typing_type(get_module_name(x))
@@ -115,7 +115,7 @@ def get_typing_type(type_name: str):
 def get_common_type(variables: List[Any]):
     types = [
         get_nested_type(t).split("[") for t in variables
-    ]  # TODO(tilo): really split [ ??
+    ]  # TODO(tilo): tree-parsing needed here! common-branch needed!
     common_prefix = os.path.commonprefix(types)
 
     if len(common_prefix) > 0:
